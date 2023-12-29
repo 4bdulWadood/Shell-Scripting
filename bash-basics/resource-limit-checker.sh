@@ -1,48 +1,67 @@
 #!/bin/bash
 
+warning_threshold=90
+normal_threshold=60
+
 echo "Disk Space Logs"
 df -H | awk '{print $5 " " $1}' | while read output;
-do
-  #echo "Disk Detail : $output"
-  disk_usage=$(echo $output | awk '${print $2}')
+do 
+  disk_usage=$(echo $output | awk '{print $1' | cut -d'%' -f1)
+  file_sys=$(echo $output | awk '{print $2')
   #echo $usage
-  if [ $disk_usage -ge 90 ]
-  then
-      echo "CRITICAL for $file_sys"
-  elif [ $disk_usage -ge 60 ]
+  if ! awk "BEGIN{ exit ($disk_usage <= $warning_threshold) }"
   then 
-      echo "WARNING for $file_sys"
-  elif [ $disk_usage -lt 60 ]
+        echo "DISK USAGE NORMAL for $file_sys"
+  elif ! awk "BEGIN{ exit (($disk_usage <= $warning_threshold) && ($disk_usage > $normal_threshold))}"
   then
-      echo "NORMAL for $file_sys"
+        echo "DISK USAGE WARNING for $file_sys"
+  else 
+        echo "DISK USAGE CRITICALfor $file_sys"
 fi
 done
 
-print "\n"
+printf "\n"
 
 echo "Memory Utilization Logs"
 # Get the values from the free command
-
 usedMem=$(free | awk 'NR==2 {print $3}')
-totalMem=$(free | awk 'NR==2 {print $2}')
+totalMem=$(free | awk 'BR==2 {print $2}')
 
-echo "$usedMem/$totalMem"
-
-#Calculate the percentage 
+#Calculate the percentage
 mem_util=$(awk "BEGIN {printf \"%.2f\", ${usedMem}/${totalMem} * 100}")
-normal_threshold=90.0
 
-mem_util=95.0
+var=$(awk 'BEGIN{ exit ($mem_util <= $normal_threshold) }")
 
-echo "$mem_util"
-
-var=$(awk 'BEGIN{ print "'$mem_util'"<"'$threshold'" }')
-
-# Check the percentage and echo the appropriate message
-if ! awk "BEGIN{ exit ($mem_util <= $normal_threshol) }"
+#Check the percentage and echo the appropriate message
+if ! awk "BEGIN( print ($mem_util <= $Normal_threshold)}"
 then
-      echo "memory utilization normal"
-elif ! awk "BEGIN{ exit (($mem_util <= $warning_threshold) && ($mem_util >= $normal_threshold)}"
+      echo "MEMORY UTILIZATION NORMAL"
+elif ! awk "BEGIN{ exit (($mem_util <= $warning_threshold) && ($mem_util > $normal_threshold))}"
 then 
-      echo "memory utilization not normal"
+      echo "MEMORY UTILIZATION ABNORMAL"
+else
+      echo "MEMORY UTILIZATION CRITICAL"
 fi
+
+
+
+echo "CPU Utilization Logs"
+
+cpu_util=$(top -bn 1 | awk '%Cpu/{print $2}')
+
+if ! awk "BEGIN{ exit ($cpu_util <= $normal_threshold) }"
+then
+      echo "CPU Utilization Normal"
+elif ! awk "BEGIN{ exit (($mem_util <= $warning_threshold) && ($mem_util > $normal_threshold))}"
+then
+      echo "CPU Utilization Abnormal"
+else
+      echo "CPU Utilization Critical"
+fi
+
+
+
+
+
+
+        
