@@ -1,7 +1,7 @@
 #!/bin/bash
 
-warning_threshold=90
-normal_threshold=60
+warning_threshold=$1
+normal_threshold=$2
 
 echo "Disk Space Logs"
 df -H | awk '{print $5 " " $1}' | while read output;
